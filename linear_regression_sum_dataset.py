@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import os
 import csv
-from sklearn.linear_model import LinearRegression
+from sklearn import linear_model
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 
@@ -16,7 +16,9 @@ def printResultsToCsv():
 
 def createRegressionModel(type):
     if type == "linear":
-        return LinearRegression() # instantiate model
+        return linear_model.LinearRegression() # instantiate model
+    elif type == "ridge":
+        return linear_model.Ridge()
     else:
         print("Incorrect specification of regression model")
         return;
@@ -27,7 +29,7 @@ def readData(filename,sep,nrows):
     # drop null attributes
     data = data.dropna()
     # use the list to create a subset of the original DataFrame (X)
-    X = data.loc[:,feature_cols] # for 100 rows select the 'feature cols'
+    X = data.loc[:,getFeatures(filename)] # for 100 rows select the 'feature cols'
     # select the Target column as the response (Y)
     y = data.Target # select first 100 elements from the Target
 
@@ -35,14 +37,19 @@ def readData(filename,sep,nrows):
 
     return dataDict;
 
+# Creates array with appropriate row name as first element, and scores as tail, for printing to csv
+def createResultRow(regression_type,dataset_name, regression_metric_name, scores):
+    result_row = [regression_type +"; "+ dataset_name + ";" + regression_metric];
+    result_row += scores;
+    return result_row;
+
 def addToResults(results_row):
-    allResults.append(results_row)
+    allResults.append(results_row);
     return;
 
 # data = data dictionary with x and y keys
 # regression_model_type: string containing type of regression model
 def runRegression(data, regression_model_type):
-    print("Running regression")
     # TODO: Dynamic selection of regression model type
     regression_model = createRegressionModel(regression_model_type);
 
@@ -61,13 +68,12 @@ def runRegression(data, regression_model_type):
 
     # calculate average RMSE
     print ("["+ filename+": "+ regression_metric +"] Mean score for sample size " + str(sample_size) + " : " + str(scores.mean()))
-    results.append(scores.mean());
+    return scores.mean();
 
-    addToResults(results);
-
-    return;
-
-
+feature_cols = ['Feature 1', 'Feature 2', 'Feature 3', 'Feature 4', 'Feature 6', 'Feature 7', 'Feature 8', 'Feature 9', 'Feature 10']
+features = {"newsum.csv": feature_cols}
+def getFeatures(dataset_name):
+    return features[dataset_name]
 
 multiplier = 5
 sample_size = 100
@@ -90,17 +96,16 @@ results = []
 regression_metrics = ['neg_mean_squared_error','r2']
 
 # create a python list of feature names
-feature_cols = ['Feature 1', 'Feature 2', 'Feature 3', 'Feature 4', 'Feature 6', 'Feature 7', 'Feature 8', 'Feature 9', 'Feature 10']
 
 for filename in filenames:
     for regression_metric in regression_metrics:
-        results = [filename+regression_metric]
+        scores = []
         for sample_size in sample_sizes:
             # read data
             data = readData(filename,";",sample_size);
             # TODO: For all regression types
-            runRegression(data, "linear");
-
-
-
+            score = runRegression(data, "linear");
+            scores.append(score)
+        result_row = createResultRow("linear", filename,regression_metric, scores);
+        addToResults(result_row);
 printResultsToCsv()
