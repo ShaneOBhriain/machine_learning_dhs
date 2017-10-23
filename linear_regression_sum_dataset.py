@@ -35,6 +35,10 @@ def readData(filename,sep,nrows):
 
     return dataDict;
 
+def addToResults(results_row):
+    allResults.append(results_row)
+    return;
+
 # data = data dictionary with x and y keys
 # regression_model_type: string containing type of regression model
 def runRegression(data, regression_model_type):
@@ -59,7 +63,7 @@ def runRegression(data, regression_model_type):
     print ("["+ filename+": "+ regression_metric +"] Mean score for sample size " + str(sample_size) + " : " + str(scores.mean()))
     results.append(scores.mean());
 
-    allResults.append(results)
+    addToResults(results);
 
     return;
 
