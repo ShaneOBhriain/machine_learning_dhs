@@ -25,17 +25,17 @@ def createRegressionModel(type):
 
 def readData(filename,nrows):
     # read CSV file directly from path and save the results
-    data_file = pd.read_csv(filename, sep=getSeperator(filename), index_col = 0, nrows=nrows)
-
+    data = pd.read_csv(filename, sep=getSeperator(filename), index_col = 0, nrows=nrows)
+    data = data.replace(np.NaN, 0)
     # drop null attributes
-    data = data_file.dropna()
+    data = data.dropna()
 
     # use the list to create a subset of the original DataFrame (X)
     X = data.loc[:,getFeatures(filename)]
-
+    # print("X")
+    # print(X)
     # select the Target column as the response (Y)
     y = data[getTargetName(filename)]
-
     dataDict = {"x": X, "y": y}
 
     return dataDict;
@@ -51,7 +51,7 @@ def addToResults(results_row):
     return;
 
 sum_features = ['Feature 1', 'Feature 2', 'Feature 3', 'Feature 4','Feature 5 (meaningless but please still use it)', 'Feature 6', 'Feature 7', 'Feature 8', 'Feature 9', 'Feature 10']
-housing_features = ["MSSubClass", "MSZoning", "LotFrontage", "LotArea", "overallCond", "YearBuilt", "YearRemodAdd", "TotalBsmtSF","1stFlrSF","2ndFlrSF", "GrLivArea","BedroomAbvGr,""TotRmsAbvGrd", "Fireplaces", "GarageYrBlt","GarageArea"]
+housing_features = ["MSSubClass", "LotFrontage", "LotArea", "YearBuilt", "YearRemodAdd", "TotalBsmtSF","1stFlrSF","2ndFlrSF", "GrLivArea","BedroomAbvGr","TotRmsAbvGrd", "Fireplaces"]
 
 features = {"newsum.csv": sum_features, "sum_ds_wn.csv": sum_features, "housing_dataset.csv": housing_features  }
 
@@ -100,7 +100,7 @@ filename2 = "sum_ds_wn.csv"
 filename3 = "housing_dataset.csv"
 # filename4 = "sum_ds_nn.csv"
 
-filenames = [filename1, filename2];
+filenames = [filename1,filename2,filename3];
 sample_sizes = [100,500,1000]
 # sample_sizes = [100,500,1000,5000,10000,50000,100000,500000,1000000,5000000,10000000,50000000,100000000]
 
