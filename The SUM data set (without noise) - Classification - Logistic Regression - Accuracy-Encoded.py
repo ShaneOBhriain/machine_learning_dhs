@@ -20,7 +20,6 @@ from sklearn.model_selection import KFold
 
 logistic_reg = LogisticRegression() # instantiate 
 kfold = KFold(n_splits=10, random_state=0)
-scores = cross_val_score(logistic_reg, X, y, cv=kfold, scoring='accuracy')
 
 # Change "Target Class" to numeric values
 from sklearn.preprocessing import LabelEncoder
