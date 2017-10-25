@@ -3,63 +3,57 @@ from sklearn.metrics import precision_score
 
 result_file_name = "results.csv"
 
-sample_sizes = [100]
-
-filename1 = "newsum.csv"
-filename2 = "sum_ds_wn.csv"
-filename3 = "housing_dataset.csv"
-filename4 = "kc_house_data.csv"
-filename5 = "winequality-red.csv"
-
-filenames = [filename1,filename2,filename3,filename4, filename5];
-
-target_names_regression = {"newsum.csv": "Target", "sum_ds_wn.csv": "Noisy Target", "housing_dataset.csv": "SalePrice","kc_house_data.csv":"price", "winequality-red.csv": "quality"}
-target_names_classification = {"newsum.csv": "Target Class", "sum_ds_wn.csv": "Noisy Target Class", "housing_dataset.csv": "SalePrice", "kc_house_data.csv":"price", "winequality-red.csv": "quality"}
+sample_sizes = [100,500,1000,5000,10000,50000]
 
 sum_features = ['Feature 1', 'Feature 2', 'Feature 3', 'Feature 4','Feature 5 (meaningless but please still use it)', 'Feature 6', 'Feature 7', 'Feature 8', 'Feature 9', 'Feature 10']
 
 file1 = {
-            "name": filename1,
+            "name": "newsum.csv",
             "sep":";",
             "regression_target": "Target",
             "classification_target":"Target Class",
             "features": sum_features,
-            "needs_transformation": False
+            "needs_transformation": False,
+            "too_many_features": False
         }
 file2 = {
-            "name": filename2,
+            "name": "sum_ds_wn.csv",
             "sep":";",
             "regression_target": "Noisy Target",
             "classification_target":"Noisy Target Class",
             "features":sum_features,
-            "needs_transformation": False
+            "needs_transformation": False,
+            "too_many_features": False
         }
 file3 = {
-        "name": filename3,
-        "sep":",",
+            "name": "housing_dataset.csv",
+            "sep":",",
             "regression_target": "SalePrice",
             "classification_target":"SalePrice",
-            "features": ["MSSubClass", "LotFrontage", "LotArea", "YearBuilt", "YearRemodAdd", "TotalBsmtSF","1stFlrSF","2ndFlrSF", "GrLivArea","BedroomAbvGr","TotRmsAbvGrd", "Fireplaces"],
             "transform_function" : lambda x: round(x/50000),
-            "needs_transformation": True
+            "needs_transformation": True,
+            "too_many_features": True,
+            "drop_features": ["MoSold", "YrSold", "MiscFeature"]
         }
 file4 = {
-        "name": filename4,
-        "sep":",",
+            "name": "kc_house_data.csv",
+            "sep":",",
             "regression_target": "price",
             "classification_target":"price",
             "features": ["bedrooms","bathrooms","sqft_living","sq_loft","grade"],
             "transform_function" : lambda x: round(x/100000),
-            "needs_transformation": True
+            "needs_transformation": True,
+            "too_many_features": False
         }
 file5 = {
-        "name": filename5,
-        "sep":";",
+            "name": "winequality-red.csv",
+            "sep":";",
             "regression_target": "quality",
             "classification_target":"quality",
             "features": ["fixed acidity","volatile acidity","citric acid","residual sugar","chlorides","free sulfur dioxide","total sulfur dioxide","density","pH","sulphates","alcohol"],
             "transform_function" : lambda x: x,
-            "needs_transformation": False
+            "needs_transformation": False,
+            "too_many_features": False
         }
 
 
