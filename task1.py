@@ -56,22 +56,20 @@ def getX(data, datafile):
     else:
         return data.loc[:,datafile["features"]]
 
+
 def readData(datafile,nrows,is_classification):
     filename= datafile["name"]
-    # read CSV file directly from path and save the results
     data = pd.read_csv(filename, sep=datafile["sep"], index_col = 0, nrows=nrows)
     data = data.replace(np.NaN, 0)
-    # drop null attributes
     data = data.dropna()
 
-    # use the list to create a subset of the original DataFrame (X)
     X = getX(data,datafile)
 
     target_column_name = getTargetName(datafile, is_classification)
 
     y = data[target_column_name]
 
-    if is_classification and "Class" not in target_column_name and "wine" not in filename:
+    if is_classification and datafile["needs_transformation"]:
         y = [transformValueToClassValue(i,datafile) for i in (y.tolist())]
         y = pd.Series(data=y)
 
@@ -125,9 +123,7 @@ def runRegression(data, regression_model_type, regression_metric, filename,sampl
     scores = cross_val_score(lm, features, targets, cv=kfold, scoring=regression_metric)
 
     if regression_metric == "neg_mean_squared_error":
-        # fix the sign of MSE scores
         mse_scores = -scores
-        # convert from MSE to RMSE
         scores = np.sqrt(mse_scores)
 
     print ("["+ filename+": "+ regression_model_type + ":"+ str(regression_metric) +" ] Score for sample size " + str(sample_size) + " : " + str(scores.mean()))

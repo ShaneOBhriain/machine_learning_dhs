@@ -3,7 +3,7 @@ from sklearn.metrics import precision_score
 
 result_file_name = "results.csv"
 
-sample_sizes = [1000]
+sample_sizes = [100]
 
 filename1 = "newsum.csv"
 filename2 = "sum_ds_wn.csv"
@@ -23,14 +23,16 @@ file1 = {
             "sep":";",
             "regression_target": "Target",
             "classification_target":"Target Class",
-            "features": sum_features
+            "features": sum_features,
+            "needs_transformation": False
         }
 file2 = {
             "name": filename2,
             "sep":";",
             "regression_target": "Noisy Target",
             "classification_target":"Noisy Target Class",
-            "features":sum_features
+            "features":sum_features,
+            "needs_transformation": False
         }
 file3 = {
         "name": filename3,
@@ -38,7 +40,8 @@ file3 = {
             "regression_target": "SalePrice",
             "classification_target":"SalePrice",
             "features": ["MSSubClass", "LotFrontage", "LotArea", "YearBuilt", "YearRemodAdd", "TotalBsmtSF","1stFlrSF","2ndFlrSF", "GrLivArea","BedroomAbvGr","TotRmsAbvGrd", "Fireplaces"],
-            "transform_function" : lambda x: round(x/50000)
+            "transform_function" : lambda x: round(x/50000),
+            "needs_transformation": True
         }
 file4 = {
         "name": filename4,
@@ -46,7 +49,8 @@ file4 = {
             "regression_target": "price",
             "classification_target":"price",
             "features": ["bedrooms","bathrooms","sqft_living","sq_loft","grade"],
-            "transform_function" : lambda x: round(x/100000)
+            "transform_function" : lambda x: round(x/100000),
+            "needs_transformation": True
         }
 file5 = {
         "name": filename5,
@@ -54,7 +58,8 @@ file5 = {
             "regression_target": "quality",
             "classification_target":"quality",
             "features": ["fixed acidity","volatile acidity","citric acid","residual sugar","chlorides","free sulfur dioxide","total sulfur dioxide","density","pH","sulphates","alcohol"],
-            "transform_function" : lambda x: x
+            "transform_function" : lambda x: x,
+            "needs_transformation": False
         }
 
 
@@ -62,6 +67,8 @@ files =  [file1,file2,file3,file4,file5]
 
 regression_models = ["Linear Regression", "Ridge Regression"]
 classification_models = ["Logistic Regression", "K Neighbours"]
+
+
 
 regression_metrics = {0: 'neg_mean_squared_error',1: "r2"}
 classification_metrics = {0: 'accuracy', 1: make_scorer(precision_score, average="weighted")}
