@@ -49,12 +49,20 @@ def transformValueToClassValue(value, filename):
 
 def transformColumn(column):
     transformed_list = LabelEncoder().fit_transform(column.tolist())
-    # print("transformed_list" + str(len(transformed_list)))
-    # print(transformed_list)
     transformed_series = pd.Series(data=transformed_list)
     transformed_series.replace(np.NaN, 0)
     transformed_series.set_value(100,2)
     return transformed_series
+
+def getX(data, filename):
+    if filename == "housing_dataset.csv":
+        x = data.drop("MoSold",1)
+        x = x.drop("YrSold",1)
+        x = x.drop("MiscFeature",1)
+        x = x.dropna()
+        return x
+    else:
+        return data.loc[:,getFeatures(filename)]
 
 def readData(filename,nrows,is_classification):
     # read CSV file directly from path and save the results
@@ -64,14 +72,13 @@ def readData(filename,nrows,is_classification):
     data = data.dropna()
 
     # use the list to create a subset of the original DataFrame (X)
-    X = data.loc[:,getFeatures(filename)]
+    X = getX(data,filename)
 
     target_column_name = getTargetName(filename, is_classification)
 
     y = data[target_column_name]
 
     if is_classification and "Class" not in target_column_name:
-        print("IS CLASSIFICATION AND CLASS NOT IN target_column_name: " )
         y = [transformValueToClassValue(i,filename) for i in (y.tolist())]
         y = pd.Series(data=y)
 
@@ -134,12 +141,6 @@ def runRegression(data, regression_model_type, regression_metric, filename,sampl
                 features[column] = transformColumn(features[column])
 
     targets = data["y"]
-    if filename=="kc_house_data.csv":
-        print("targets.tolist()")
-        print(targets.tolist())
-        print("regression_model_type")
-        print(regression_model_type)
-        # print("targets")
     # For logisitic regression need to convert labels to values
     if regression_model_type == "Logistic Regression":
         targets = LabelEncoder().fit_transform(targets.tolist())
@@ -201,13 +202,9 @@ def main():
             for i in [0,1]:
                 metric = getMetric(model, i,False)
                 metric_name = getMetric(model, i,True)
-                print(type(metric))
-                print(metric)
                 scores = []
                 for sample_size in sample_sizes:
                     data = readData(filename,sample_size, isClassification(model));
-                    # print("data")
-                    # print(data)
                     score = runRegression(data, model, metric,filename,sample_size);
                     scores.append(score)
 
