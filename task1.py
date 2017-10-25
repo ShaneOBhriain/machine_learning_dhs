@@ -39,7 +39,10 @@ def createHouseTargetClass(value):
 def createKcTargetClass(value):
     return round(value/100000)
 
-transform_functions = {"housing_dataset.csv": createHouseTargetClass, "kc_house_data.csv": createKcTargetClass }
+def createWineTargetClass(value):
+    return value
+
+transform_functions = {"housing_dataset.csv": createHouseTargetClass, "kc_house_data.csv": createKcTargetClass, "winequality-red.csv": createWineTargetClass }
 
 def transformValueToClassValue(value, filename):
     if "str" in str(type(value)):
@@ -78,7 +81,7 @@ def readData(filename,nrows,is_classification):
 
     y = data[target_column_name]
 
-    if is_classification and "Class" not in target_column_name:
+    if is_classification and "Class" not in target_column_name and "wine" not in filename:
         y = [transformValueToClassValue(i,filename) for i in (y.tolist())]
         y = pd.Series(data=y)
 
@@ -92,13 +95,14 @@ sum_features = ['Feature 1', 'Feature 2', 'Feature 3', 'Feature 4','Feature 5 (m
 # TODO: Fix housing_features
 housing_features = ["MSSubClass", "LotFrontage", "LotArea", "YearBuilt", "YearRemodAdd", "TotalBsmtSF","1stFlrSF","2ndFlrSF", "GrLivArea","BedroomAbvGr","TotRmsAbvGrd", "Fireplaces"]
 kc_house_features = ["bedrooms","bathrooms","sqft_living","sq_loft","grade"]
-features = {"newsum.csv": sum_features, "sum_ds_wn.csv": sum_features, "housing_dataset.csv": housing_features, "kc_house_data.csv": kc_house_features  }
+wine_features =  ["fixed acidity","volatile acidity","citric acid","residual sugar","chlorides","free sulfur dioxide","total sulfur dioxide","density","pH","sulphates","alcohol"]
+features = {"newsum.csv": sum_features, "sum_ds_wn.csv": sum_features, "housing_dataset.csv": housing_features, "kc_house_data.csv": kc_house_features, "winequality-red.csv": wine_features}
 
 def getFeatures(dataset_name):
     return features[dataset_name]
 
-target_names_regression = {"newsum.csv": "Target", "sum_ds_wn.csv": "Noisy Target", "housing_dataset.csv": "SalePrice","kc_house_data.csv":"price"}
-target_names_classification = {"newsum.csv": "Target Class", "sum_ds_wn.csv": "Noisy Target Class", "housing_dataset.csv": "SalePrice", "kc_house_data.csv":"price"}
+target_names_regression = {"newsum.csv": "Target", "sum_ds_wn.csv": "Noisy Target", "housing_dataset.csv": "SalePrice","kc_house_data.csv":"price", "winequality-red.csv": "quality"}
+target_names_classification = {"newsum.csv": "Target Class", "sum_ds_wn.csv": "Noisy Target Class", "housing_dataset.csv": "SalePrice", "kc_house_data.csv":"price", "winequality-red.csv": "quality"}
 def getTargetName(dataset_name, is_classification):
     if is_classification:
         target_name = target_names_classification[dataset_name]
@@ -180,9 +184,10 @@ filename1 = "newsum.csv"
 filename2 = "sum_ds_wn.csv"
 filename3 = "housing_dataset.csv"
 filename4 = "kc_house_data.csv"
+filename5 = "winequality-red.csv"
 
 sample_sizes = [100]
-filenames = [filename1,filename2,filename3,filename4];
+filenames = [filename1,filename2,filename3,filename4, filename5];
 # sample_sizes = [100,500,1000,5000,10000,50000,100000,500000,1000000,5000000,10000000,50000000,100000000]
 
 first_row = [""] + sample_sizes
