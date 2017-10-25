@@ -36,7 +36,10 @@ def createHouseTargetClass(value):
     # print ("CREATING HOUSE TARGET: FROM: " + str(value) + " TO: " + str(round(value / 50000.0)))
     return round(value / 50000.0)
 
-transform_functions = {"housing_dataset.csv": createHouseTargetClass}
+def createKcTargetClass(value):
+    return round(value/100000)
+
+transform_functions = {"housing_dataset.csv": createHouseTargetClass, "kc_house_data.csv": createKcTargetClass }
 
 def transformValueToClassValue(value, filename):
     if "str" in str(type(value)):
@@ -46,8 +49,8 @@ def transformValueToClassValue(value, filename):
 
 def transformColumn(column):
     transformed_list = LabelEncoder().fit_transform(column.tolist())
-    print("transformed_list" + str(len(transformed_list)))
-    print(transformed_list)
+    # print("transformed_list" + str(len(transformed_list)))
+    # print(transformed_list)
     transformed_series = pd.Series(data=transformed_list)
     transformed_series.replace(np.NaN, 0)
     transformed_series.set_value(100,2)
@@ -55,7 +58,6 @@ def transformColumn(column):
 
 def readData(filename,nrows,is_classification):
     # read CSV file directly from path and save the results
-    print("seperator : " + getSeperator(filename))
     data = pd.read_csv(filename, sep=getSeperator(filename), index_col = 0, nrows=nrows)
     data = data.replace(np.NaN, 0)
     # drop null attributes
@@ -64,17 +66,12 @@ def readData(filename,nrows,is_classification):
     # use the list to create a subset of the original DataFrame (X)
     X = data.loc[:,getFeatures(filename)]
 
-    if(filename=="housing_dataset.csv"):
-        X = data.drop("SalePrice",1)
-        X.drop("YrSold",1,inplace=True)
-        X.drop("MoSold",1,inplace=True)
-        X.drop("MiscVal",1,inplace=True)
-
     target_column_name = getTargetName(filename, is_classification)
 
     y = data[target_column_name]
 
     if is_classification and "Class" not in target_column_name:
+        print("IS CLASSIFICATION AND CLASS NOT IN target_column_name: " )
         y = [transformValueToClassValue(i,filename) for i in (y.tolist())]
         y = pd.Series(data=y)
 
@@ -87,19 +84,20 @@ def readData(filename,nrows,is_classification):
 sum_features = ['Feature 1', 'Feature 2', 'Feature 3', 'Feature 4','Feature 5 (meaningless but please still use it)', 'Feature 6', 'Feature 7', 'Feature 8', 'Feature 9', 'Feature 10']
 # TODO: Fix housing_features
 housing_features = ["MSSubClass", "LotFrontage", "LotArea", "YearBuilt", "YearRemodAdd", "TotalBsmtSF","1stFlrSF","2ndFlrSF", "GrLivArea","BedroomAbvGr","TotRmsAbvGrd", "Fireplaces"]
-wine_features = ["fixed acidity","volatile acidity","citric_acid","residual sugar","alcohol"]
-features = {"newsum.csv": sum_features, "sum_ds_wn.csv": sum_features, "housing_dataset.csv": housing_features, "winequality-red.csv": wine_features  }
+kc_house_features = ["bedrooms","bathrooms","sqft_living","sq_loft","grade"]
+features = {"newsum.csv": sum_features, "sum_ds_wn.csv": sum_features, "housing_dataset.csv": housing_features, "kc_house_data.csv": kc_house_features  }
 
 def getFeatures(dataset_name):
     return features[dataset_name]
 
-target_names_regression = {"newsum.csv": "Target", "sum_ds_wn.csv": "Noisy Target", "housing_dataset.csv": "SalePrice","winequality-red.csv":"quality"}
-target_names_classification = {"newsum.csv": "Target Class", "sum_ds_wn.csv": "Noisy Target Class", "housing_dataset.csv": "SalePrice", "winequality-red.csv":"quality"}
+target_names_regression = {"newsum.csv": "Target", "sum_ds_wn.csv": "Noisy Target", "housing_dataset.csv": "SalePrice","kc_house_data.csv":"price"}
+target_names_classification = {"newsum.csv": "Target Class", "sum_ds_wn.csv": "Noisy Target Class", "housing_dataset.csv": "SalePrice", "kc_house_data.csv":"price"}
 def getTargetName(dataset_name, is_classification):
     if is_classification:
         target_name = target_names_classification[dataset_name]
     else:
         target_name = target_names_regression[dataset_name]
+
     return target_name
 
 def getSeperator(dataset_name):
@@ -128,7 +126,7 @@ def getMetric(model, key, for_label):
 def runRegression(data, regression_model_type, regression_metric, filename,sample_size):
     # TODO: Dynamic selection of regression model type
     lm = createRegressionModel(regression_model_type)
-    features = data["x"]
+    features = data["x"].replace(np.NaN,0)
     if(filename=="housing_dataset.csv"):
         new_features = []
         for column in features:
@@ -136,9 +134,12 @@ def runRegression(data, regression_model_type, regression_metric, filename,sampl
                 features[column] = transformColumn(features[column])
 
     targets = data["y"]
-    if filename=="winequality-red.csv":
-        print(targets)
-        print("targets")
+    if filename=="kc_house_data.csv":
+        print("targets.tolist()")
+        print(targets.tolist())
+        print("regression_model_type")
+        print(regression_model_type)
+        # print("targets")
     # For logisitic regression need to convert labels to values
     if regression_model_type == "Logistic Regression":
         targets = LabelEncoder().fit_transform(targets.tolist())
@@ -177,7 +178,7 @@ data_path = os.path.abspath('Data Sets/The SUM dataset/without noise/The SUM dat
 filename1 = "newsum.csv"
 filename2 = "sum_ds_wn.csv"
 filename3 = "housing_dataset.csv"
-filename4 = "winequality-red.csv"
+filename4 = "kc_house_data.csv"
 
 sample_sizes = [100]
 filenames = [filename1,filename2,filename3,filename4];
@@ -205,7 +206,8 @@ def main():
                 scores = []
                 for sample_size in sample_sizes:
                     data = readData(filename,sample_size, isClassification(model));
-
+                    # print("data")
+                    # print(data)
                     score = runRegression(data, model, metric,filename,sample_size);
                     scores.append(score)
 
