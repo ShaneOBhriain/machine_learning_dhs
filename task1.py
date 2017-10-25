@@ -57,7 +57,7 @@ def getX(data, datafile):
         return data.loc[:,datafile["features"]]
 
 
-def readData(datafile,nrows,is_classification):
+def readData(datafile,nrows,model_type):
     filename= datafile["name"]
     data = pd.read_csv(filename, sep=datafile["sep"], index_col = 0, nrows=nrows)
     data = data.replace(np.NaN, 0)
@@ -65,11 +65,11 @@ def readData(datafile,nrows,is_classification):
 
     X = getX(data,datafile)
 
-    target_column_name = getTargetName(datafile, is_classification)
+    target_column_name = getTargetName(datafile, model_type)
 
     y = data[target_column_name]
 
-    if is_classification and datafile["needs_transformation"]:
+    if model_type=="classification" and datafile["needs_transformation"]:
         y = [transformValueToClassValue(i,datafile) for i in (y.tolist())]
         y = pd.Series(data=y)
 
@@ -82,13 +82,8 @@ def getFeatures(dataset_name):
     return features[dataset_name]
 
 
-def getTargetName(datafile, is_classification):
-    if is_classification:
-        target_name = datafile["classification_target"]
-    else:
-        target_name = datafile["regression_target"]
-
-    return target_name
+def getTargetName(datafile, target_type):
+    return datafile[target_type + "_target"]
 
 def getMetric(model, key, for_label):
     if model == "Linear Regression":
@@ -129,11 +124,6 @@ def runRegression(data, regression_model_type, regression_metric, filename,sampl
     print ("["+ filename+": "+ regression_model_type + ":"+ str(regression_metric) +" ] Score for sample size " + str(sample_size) + " : " + str(scores.mean()))
     return scores.mean();
 
-def isClassification(model_name):
-    if model_name in config.classification_models:
-        return True
-    else:
-        return False
 # Creates array with appropriate row name as first element, and scores as tail, for printing to csv
 def createResultRow(regression_type,dataset_name, regression_metric_name, scores):
     result_row = [regression_type +"- "+ dataset_name + "- " + regression_metric_name];
@@ -152,18 +142,19 @@ results = []
 all_models = config.regression_models + config.classification_models
 
 def main():
-    for model in all_models:
+    for model in config.models:
+        model_name = model["name"]
         for datafile in config.files:
             filename = datafile["name"]
             for i in [0,1]:
-                metric = getMetric(model, i,False)
-                metric_name = getMetric(model, i,True)
+                metric = getMetric(model_name, i,False)
+                metric_name = getMetric(model_name, i,True)
                 scores = []
                 for sample_size in config.sample_sizes:
-                    data = readData(datafile,sample_size, isClassification(model));
-                    score = runRegression(data, model, metric,filename,sample_size);
+                    data = readData(datafile,sample_size, model["type"]);
+                    score = runRegression(data, model_name, metric,filename,sample_size);
                     scores.append(score)
-                result_row = createResultRow(model, filename,metric_name, scores);
+                result_row = createResultRow(model_name, filename,metric_name, scores);
                 addToResults(result_row);
     printResultsToCsv(config.result_file_name)
 

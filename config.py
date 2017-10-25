@@ -68,6 +68,11 @@ files =  [file1,file2,file3,file4,file5]
 regression_models = ["Linear Regression", "Ridge Regression"]
 classification_models = ["Logistic Regression", "K Neighbours"]
 
+models = [ {"name":"Linear Regression", "type": "regression"},
+            {"name":"Ridge Regression", "type": "regression"},
+            {"name":"Logistic Regression", "type": "classification"},
+            {"name":"K Neighbours", "type": "classification"}
+        ]
 
 
 regression_metrics = {0: 'neg_mean_squared_error',1: "r2"}
