@@ -3,12 +3,10 @@ import numpy as np
 import os
 import csv
 import config
-from sklearn import linear_model
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import LabelBinarizer
-from sklearn.neighbors import KNeighborsClassifier
 from scipy.linalg import norm
 
 ######## Results handling for printing to CSV
@@ -37,24 +35,11 @@ def addToResults(results_row):
 
 ######## Creation and Running of Regression Model
 
-def createRegressionModel(type):
-    if type == "Linear Regression":
-        return linear_model.LinearRegression() # instantiate model
-    elif type == "Ridge Regression":
-        return linear_model.Ridge()
-    elif type == "Logistic Regression":
-        return linear_model.LogisticRegression() # instantiate
-    elif type == "K Neighbours":
-        return KNeighborsClassifier(20)
-    else:
-        print("Incorrect specification of regression model")
-        return;
-
 # data = dictionary, x and y keys containing X and Y or features and targets
-# regression_model_type: string, type of regression model
+# model_to_run: object, contains name, mdoel and type of regression model
 # regression_metric = string, scoring metric for cross_val score
-def runRegression(data, regression_model_type, regression_metric, file_info,sample_size):
-    model = createRegressionModel(regression_model_type)
+def runRegression(data, model_to_run, regression_metric, file_info,sample_size):
+    model = model_to_run["model"]
     # replace NaN values with zero, since dropna() leads to inconsistent input error
     features = data["x"].replace(np.NaN,0)
     if(file_info["has_categorical_columns"]):
@@ -66,7 +51,7 @@ def runRegression(data, regression_model_type, regression_metric, file_info,samp
 
     # For logisitic regression need to convert labels to values
     # TODO: check why only logisitic regression
-    if regression_model_type == "Logistic Regression":
+    if model_to_run["name"] == "Logistic Regression":
         targets = LabelEncoder().fit_transform(targets.tolist())
 
     # 10-fold cross validation with linear regression
@@ -80,7 +65,7 @@ def runRegression(data, regression_model_type, regression_metric, file_info,samp
     # normalise scores to have all between 0 and 1
         scores_norm = norm(scores)
         scores = np.array([x/scores_norm for x in scores])
-    print ("["+ file_info["name"]+": "+ regression_model_type + ":"+ str(regression_metric) +" ] Score for sample size " + str(sample_size) + " : " + str(scores.mean()))
+    print ("["+ file_info["name"]+": "+ model_to_run["name"] + ":"+ str(regression_metric) +" ] Score for sample size " + str(sample_size) + " : " + str(scores.mean()))
     return scores.mean();
 
 # End Creation and Runnning of Regression Model ########
@@ -160,7 +145,7 @@ def main():
                 scores = []
                 for sample_size in config.sample_sizes:
                     data = readData(file_info,sample_size, model["type"]);
-                    score = runRegression(data, model_name, metric,file_info,sample_size);
+                    score = runRegression(data, model, metric,file_info,sample_size);
                     scores.append(score)
                 result_row = createResultRow(model_name, filename,metric_name, scores);
                 addToResults(result_row);

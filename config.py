@@ -1,5 +1,7 @@
 from sklearn.metrics import make_scorer
 from sklearn.metrics import precision_score
+from sklearn import linear_model
+from sklearn.neighbors import KNeighborsClassifier
 
 result_file_name = "results_no_random_state.csv"
 
@@ -73,13 +75,11 @@ taxi_file_info = {
 
 files =  [sum_with_noise_file_info]
 
-regression_models = ["Linear Regression", "Ridge Regression"]
-classification_models = ["Logistic Regression", "K Neighbours"]
 
-models = [ {"name":"Linear Regression", "type": "regression"},
-            {"name":"Ridge Regression", "type": "regression"},
-            {"name":"Logistic Regression", "type": "classification"},
-            {"name":"K Neighbours", "type": "classification"}
+models = [ {"name": "Linear Regression","model":linear_model.LinearRegression(), "type": "regression"},
+            {"name": "Ridge Regression","model":linear_model.Ridge(), "type": "regression"},
+            {"name": "Logistic Regression","model":linear_model.LogisticRegression(), "type": "classification"},
+            {"name": "K Neighbours","model":KNeighborsClassifier(20), "type": "classification"}
         ]
 
 
