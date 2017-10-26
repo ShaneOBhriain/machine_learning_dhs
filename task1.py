@@ -7,6 +7,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import LabelBinarizer
+from sklearn import preprocessing
 from scipy.linalg import norm
 
 ######## Results handling for printing to CSV
@@ -47,6 +48,7 @@ def runRegression(data, model_to_run, regression_metric, file_info,sample_size):
             if "object" in str(features[column].dtype):
                 features[column] = transformColumn(features[column]).values
 
+    features = preprocessing.scale(features)
     targets = data["y"]
 
     # For logisitic regression need to convert labels to values
@@ -76,7 +78,10 @@ def getFeatures(dataset_name):
 
 
 def getTargetName(file_info, target_type):
-    return file_info[target_type + "_target"]
+    if file_info["has_labels"]:
+        return file_info[target_type + "_target"]
+    else:
+        return file_info["target_column"]
 
 def getMetric(model, key, for_label):
     if model == "Linear Regression":
@@ -106,11 +111,14 @@ def transformColumn(column):
 
 def getX(data, file_info):
     if file_info["too_many_features"]:
-        x=data
-        for feat in file_info["drop_features"]:
-            x = x.drop(feat,1)
-        x = x.dropna()
-        return x
+        if file_info["has_labels"]:
+            x=data
+            for feat in file_info["drop_features"]:
+                x = x.drop(feat,1)
+            x = x.dropna()
+            return x
+        else:
+            return data.drop(data.columns[file_info["target_column_index"]],axis=1)
     else:
         return data.loc[:,file_info["features"]]
 
@@ -119,13 +127,18 @@ def getX(data, file_info):
 # reads csv file and returns dictionary {x: features, y: target}
 def readData(file_info,nrows,model_type):
     filename= file_info["name"]
-    data = pd.read_csv(filename, sep=file_info["sep"], index_col = 0, nrows=nrows)
+    index_col = None
+    if file_info["has_labels"]:
+        index_col = 0
+    data = pd.read_csv(filename, sep=file_info["sep"], index_col = index_col, nrows=nrows)
     data = data.replace(np.NaN, 0)
     data = data.dropna()
 
     X = getX(data,file_info)
-    y = data[getTargetName(file_info, model_type)]
-
+    if file_info["has_labels"]:
+        y = data[getTargetName(file_info, model_type)]
+    else:
+        y = data.ix[:,file_info["target_column_index"]]
     if model_type=="classification" and file_info["needs_transformation"]:
         y = [transformValueToClassValue(i,file_info) for i in (y.tolist())]
         y = pd.Series(data=y)
