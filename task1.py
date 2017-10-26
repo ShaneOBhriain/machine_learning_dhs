@@ -60,7 +60,7 @@ def runRegression(data, regression_model_type, regression_metric, file_info,samp
     if(file_info["has_categorical_columns"]):
         for column in features:
             if "object" in str(features[column].dtype):
-                features[column] = transformColumn(features[column])
+                features[column] = transformColumn(features[column]).values
 
     targets = data["y"]
 
@@ -115,7 +115,7 @@ def transformColumn(column):
     transformed_series = pd.Series(data=transformed_list)
     transformed_series = transformed_series.replace(np.NaN, 0)
     # Dont know why but the last value is always NaN, maybe an index issue where the list starts at 0 and the series at one, or something
-    transformed_series.set_value(len(transformed_series.values),transformed_list[-1])
+    # transformed_series.set_value(len(transformed_series.values),transformed_list[-1])
     return transformed_series
 
 
