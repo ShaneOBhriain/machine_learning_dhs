@@ -53,11 +53,11 @@ def createRegressionModel(type):
 # data = dictionary, x and y keys containing X and Y or features and targets
 # regression_model_type: string, type of regression model
 # regression_metric = string, scoring metric for cross_val score
-def runRegression(data, regression_model_type, regression_metric, filename,sample_size):
+def runRegression(data, regression_model_type, regression_metric, file_info,sample_size):
     model = createRegressionModel(regression_model_type)
     # replace NaN values with zero, since dropna() leads to inconsistent input error
     features = data["x"].replace(np.NaN,0)
-    if(filename=="housing_dataset.csv"):
+    if(file_info["has_categorical_columns"]):
         for column in features:
             if "object" in str(features[column].dtype):
                 features[column] = transformColumn(features[column])
@@ -80,7 +80,7 @@ def runRegression(data, regression_model_type, regression_metric, filename,sampl
     # normalise scores to have all between 0 and 1
         scores_norm = norm(scores)
         scores = np.array([x/scores_norm for x in scores])
-    print ("["+ filename+": "+ regression_model_type + ":"+ str(regression_metric) +" ] Score for sample size " + str(sample_size) + " : " + str(scores.mean()))
+    print ("["+ file_info["name"]+": "+ regression_model_type + ":"+ str(regression_metric) +" ] Score for sample size " + str(sample_size) + " : " + str(scores.mean()))
     return scores.mean();
 
 # End Creation and Runnning of Regression Model ########
@@ -160,7 +160,7 @@ def main():
                 scores = []
                 for sample_size in config.sample_sizes:
                     data = readData(file_info,sample_size, model["type"]);
-                    score = runRegression(data, model_name, metric,filename,sample_size);
+                    score = runRegression(data, model_name, metric,file_info,sample_size);
                     scores.append(score)
                 result_row = createResultRow(model_name, filename,metric_name, scores);
                 addToResults(result_row);

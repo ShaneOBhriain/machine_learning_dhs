@@ -13,7 +13,8 @@ sum_no_noise_file_info = {
             "classification_target":"Target Class",
             "features": sum_features,
             "needs_transformation": False,
-            "too_many_features": False
+            "too_many_features": False,
+            "has_categorical_columns": False
         }
 sum_with_noise_file_info = {
             "name": "sum_ds_wn.csv",
@@ -22,7 +23,8 @@ sum_with_noise_file_info = {
             "classification_target":"Noisy Target Class",
             "features":sum_features,
             "needs_transformation": False,
-            "too_many_features": False
+            "too_many_features": False,
+            "has_categorical_columns": False
         }
 big_housing_file_info = {
             "name": "housing_dataset.csv",
@@ -32,7 +34,8 @@ big_housing_file_info = {
             "transform_function" : lambda x: round(x/50000),
             "needs_transformation": True,
             "too_many_features": True,
-            "drop_features": ["MoSold", "YrSold", "MiscFeature"]
+            "drop_features": ["MoSold", "YrSold", "MiscFeature"],
+            "has_categorical_columns": True
         }
 kchouse_file_info = {
             "name": "kc_house_data.csv",
@@ -42,7 +45,8 @@ kchouse_file_info = {
             "features": ["bedrooms","bathrooms","sqft_living","sq_loft","grade"],
             "transform_function" : lambda x: round(x/100000),
             "needs_transformation": True,
-            "too_many_features": False
+            "too_many_features": False,
+            "has_categorical_columns": False
         }
 wine_file_info = {
             "name": "winequality-red.csv",
@@ -51,7 +55,8 @@ wine_file_info = {
             "classification_target":"quality",
             "features": ["fixed acidity","volatile acidity","citric acid","residual sugar","chlorides","free sulfur dioxide","total sulfur dioxide","density","pH","sulphates","alcohol"],
             "needs_transformation": False,
-            "too_many_features": False
+            "too_many_features": False,
+            "has_categorical_columns": False
         }
 taxi_file_info = {
             "name": "taxi.csv",
@@ -61,7 +66,8 @@ taxi_file_info = {
             "features": ["vendor_id","pickup_datetime","dropoff_datetime","passenger_count","pickup_longitude","pickup_latitude","dropoff_longitude","dropoff_latitude"],
             "transform_function" : lambda x: round(x/60),
             "needs_transformation": True,
-            "too_many_features": False
+            "too_many_features": False,
+            "has_categorical_columns": True
         }
 
 
