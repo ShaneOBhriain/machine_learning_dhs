@@ -11,25 +11,32 @@ from sklearn.preprocessing import LabelBinarizer
 from sklearn import preprocessing
 from scipy.linalg import norm
 
+
 ######## Results handling for printing to CSV
+
+def getMaxListLength(lists):
+    max_len = len(lists[0])
+    for l in lists:
+        if len(l) > max_len:
+            max_len = len(l)
+    return max_len
+def joinLists(list1,list2):
+    joined_list = []
+    for i in range(len(list1)):
+        joined_list.append(list1[i])
+        joined_list += list2
+    return joined_list
+
 def getResultColumnLabels():
     if config.using_evaluation:
-        return joinLists(config.sample_sizes,len(config.sample_sizes)*config.evaluation_metrics)
+        return joinLists(config.sample_sizes, config.evaluation_metrics)
     else:
         return config.sample_sizes
 
-first_row = [""] + config.sample_sizes
+first_row = [""] + getResultColumnLabels()
 allResults = [first_row]
 results = []
 
-def joinLists(lists):
-    joined_list = []
-    max_len = len(max(lists))
-    for i in range(max_len):
-        for l in lists:
-            if i < len(l):
-                joined_list.append(l[i])
-    return joined_list
 
 temp_result = "results_temp.csv"
 def printResultsToCsv(is_final):
@@ -92,7 +99,8 @@ def runRegression(data, model_to_run, regression_metric, file_info,sample_size):
     # normalise scores to have all between 0 and 1
 
     print ("["+ file_info["name"]+": "+ model_to_run["name"] + ":"+ str(regression_metric) +" ] Score for sample size " + str(sample_size) + " : " + str(scores.mean()))
-    return (scores.mean(),time_taken);
+    return (scores.mean(),time_taken, (scores.mean()/time_taken));
+
 
 # End Creation and Runnning of Regression Model ########
 regression_metrics = {0: 'neg_mean_squared_error',1: "r2",2:"neg_mean_absolute_error", 3:"explained_variance", 4: "neg_median_absolute_error" }
@@ -107,6 +115,10 @@ def normaliseScores(scores):
     return normalised_scores
 
 def fixScores(regression_metric,scores):
+    if "neg" in regression_metric:
+        scores = [-x for x in scores]
+        if regression_metric == "neg_mean_squared_error":
+            return normaliseScores(np.sqrt(scores))
     if max(scores)>1 or min(scores) <0:
         return normaliseScores(scores)
     else:
@@ -189,22 +201,24 @@ def readData(file_info,nrows,model_type):
 
 def main():
     for model in config.models:
-        model_name = model["name"]
-        print(model_name)
-        for file_info in config.files:
-            filename = file_info["name"]
-            metrics = config.metrics[model["type"]]
-            for i in metrics.keys():
-                metric = metrics[i]
-                scores = []
-                for sample_size in config.sample_sizes:
-                    data = readData(file_info,sample_size, model["type"]);
-                    (score,time) = runRegression(data, model, metric,file_info,sample_size);
-                    scores.append(score)
-                    if config.using_evaluation:
-                        scores.append(time)
-                result_row = createResultRow(model_name, filename,metric, scores);
-                addToResults(result_row);
-                printResultsToCsv(False)
-        printResultsToCsv(True)
+        if model["enabled"]:
+            model_name = model["name"]
+            print(model_name)
+            for file_info in config.files:
+                filename = file_info["name"]
+                metrics = config.metrics[model["type"]]
+                for i in metrics.keys():
+                    metric = metrics[i]
+                    scores = []
+                    for sample_size in config.sample_sizes:
+                        data = readData(file_info,sample_size, model["type"]);
+                        (score,time,rate_of_improvement) = runRegression(data, model, metric,file_info,sample_size);
+                        scores.append(score)
+                        if config.using_evaluation:
+                            scores.append(time)
+                            scores.append(rate_of_improvement)
+                    result_row = createResultRow(model_name, filename,metric, scores);
+                    addToResults(result_row);
+                    printResultsToCsv(False)
+            printResultsToCsv(True)
 main()

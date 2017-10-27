@@ -1,24 +1,29 @@
 from sklearn.metrics import make_scorer
 from sklearn.metrics import precision_score
-from sklearn import linear_model
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn import linear_model, tree
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsRegressor
 
-# Not measuring effectiveness of algos
+#
 using_evaluation = True
+# define evaluation metric names here to allow creation of column names
 evaluation_metrics = ["time","rate_of_improvement"]
 
-models = [  {"name": "Linear Regression","model":linear_model.LinearRegression(), "type": "regression", "enabled":True},
-            {"name": "Ridge Regression","model":linear_model.Ridge(), "type": "regression", "enabled":True},
-            {"name": "Logistic Regression","model":linear_model.LogisticRegression(), "type": "classification", "enabled":True},
-            {"name": "K Neighbours","model":KNeighborsClassifier(20), "type": "classification", "enabled":True}
+models = [ {"name": "Linear Regression","model":linear_model.LinearRegression(), "type": "regression"},
+            {"name": "K Neighbours","model":KNeighborsRegressor(), "type": "regression"},
+            {"name": "Decision Tree","model":tree.DecisionTreeRegressor(), "type": "regression"},
+            {"name": "Guassian Naive Bayes","model": GaussianNB(), "type": "regression"},
+            {"name": "Stochastic Gradient Descent","model": linear_model.SGDClassifier() , "type":"regression"}
         ]
 
-regression_metrics = {0: 'neg_mean_squared_error',1: "r2"}
+
+regression_metrics = {0: 'neg_mean_squared_error',1: "r2",3:"neg_mean_absolute_error", 4:"explained_variance", 5: "neg_median_absolute_error" }
 classification_metrics = {0: 'accuracy', 1: make_scorer(precision_score, average="weighted")}
 
 metrics = {"regression": regression_metrics,
-           "classification": classification_metrics
-          }
+           "classification": classification_metrics,
+           "should_calculate_effectiveness": True
+           }
 
 ### Definition of files
 sum_features = ['Feature 1', 'Feature 2', 'Feature 3', 'Feature 4','Feature 5 (meaningless but please still use it)', 'Feature 6', 'Feature 7', 'Feature 8', 'Feature 9', 'Feature 10']
@@ -65,7 +70,7 @@ kchouse_file_info = {
             "transform_function" : lambda x: round(x/100000),
             "needs_transformation": True,
             "too_many_features": False,
-            "has_categorical_columns": False,
+            "has_categorical_columns": True,
             "has_labels": True
         }
 wine_file_info = {
@@ -103,10 +108,7 @@ year_prediction_file_info = {
         }
 
 ### Specify which files you want to run
-files =  [sum_no_noise_file_info, sum_with_noise_file_info, taxi_file_info, year_prediction_file_info]
+files =  [sum_with_noise_file_info, kchouse_file_info]
+result_file_name = "results_task_3.csv"
 
-# TODO: team id in file name
-result_file_name = "task_results_Team.csv"
-
-# TODO: Multiplier while loop, file sizes
 sample_sizes = [50,100,500,1000,5000,10000,50000,100000,500000]
