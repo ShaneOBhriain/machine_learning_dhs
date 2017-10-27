@@ -199,6 +199,12 @@ def readData(file_info,nrows,model_type):
 
     return dataDict;
 
+def increaseSampleSize(current_size):
+    if list(str(current_size))[0] == "1":
+        return current_size*5
+    else:
+        return current_size*2
+
 def main():
     for model in config.models:
         if model["enabled"]:
@@ -210,13 +216,17 @@ def main():
                 for i in metrics.keys():
                     metric = metrics[i]
                     scores = []
-                    for sample_size in config.sample_sizes:
+                    sample_size = 50
+
+                    max_sample_size = config.getMaxSampleSize(file_info, model["type"])
+                    while sample_size <= max_sample_size:
                         data = readData(file_info,sample_size, model["type"]);
                         (score,time,rate_of_improvement) = runRegression(data, model, metric,file_info,sample_size);
                         scores.append(score)
                         if config.using_evaluation:
                             scores.append(time)
                             scores.append(rate_of_improvement)
+                        sample_size = increaseSampleSize(sample_size)
                     result_row = createResultRow(model_name, filename,metric, scores);
                     addToResults(result_row);
                     printResultsToCsv(False)

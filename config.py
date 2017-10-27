@@ -2,6 +2,7 @@ from sklearn.metrics import make_scorer
 from sklearn.metrics import precision_score
 from sklearn import linear_model
 from sklearn.neighbors import KNeighborsClassifier
+from count_lines import count_lines
 
 # Not measuring effectiveness of algos
 using_evaluation = True
@@ -19,6 +20,15 @@ classification_metrics = {0: 'accuracy', 1: make_scorer(precision_score, average
 metrics = {"regression": regression_metrics,
            "classification": classification_metrics
           }
+
+def getFileSize (file_info):
+    return count_lines(file_info)
+
+def getMaxSampleSize(file_info, model_type):
+    max_size = min (getFileSize(file_info), 10000 )
+    if model_type == "classification":
+        max_size = max(5000, max_size)
+    return max_size
 
 ### Definition of files
 sum_features = ['Feature 1', 'Feature 2', 'Feature 3', 'Feature 4','Feature 5 (meaningless but please still use it)', 'Feature 6', 'Feature 7', 'Feature 8', 'Feature 9', 'Feature 10']
@@ -109,4 +119,5 @@ files =  [sum_no_noise_file_info, sum_with_noise_file_info, taxi_file_info, year
 result_file_name = "task_results_Team.csv"
 
 # TODO: Multiplier while loop, file sizes
-sample_sizes = [50,100,500,1000,5000,10000,50000,100000,500000]
+sample_sizes = [50]
+# sample_sizes = [50,100,500,1000,5000,10000,50000,100000,500000]
