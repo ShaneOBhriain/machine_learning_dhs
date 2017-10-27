@@ -3,6 +3,7 @@ import numpy as np
 import os
 import csv
 import config
+import time
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import LabelEncoder
@@ -11,19 +12,40 @@ from sklearn import preprocessing
 from scipy.linalg import norm
 
 ######## Results handling for printing to CSV
+def getResultColumnLabels():
+    if config.using_evaluation:
+        return joinLists(config.sample_sizes,len(config.sample_sizes)*config.evaluation_metrics)
+    else:
+        return config.sample_sizes
 
 first_row = [""] + config.sample_sizes
 allResults = [first_row]
 results = []
 
-def printResultsToCsv():
-    with open(config.result_file_name,'w') as csvfile:
+def joinLists(lists):
+    joined_list = []
+    max_len = len(max(lists))
+    for i in range(max_len):
+        for l in lists:
+            if i < len(l):
+                joined_list.append(l[i])
+    return joined_list
+
+temp_result = "results_temp.csv"
+def printResultsToCsv(is_final):
+    if is_final:
+        out_file = config.result_file_name
+    else:
+        out_file = temp_result
+    with open(out_file,'w') as csvfile:
         resultswriter = csv.writer(csvfile, delimiter=";")
         for row in allResults:
             resultswriter.writerow(row)
     return;
 # Creates array with appropriate row name as first element, and scores as tail, for printing to csv
 def createResultRow(regression_type,dataset_name, regression_metric_name, scores):
+    if "str" not in str(type(regression_metric_name)):
+        regression_metric_name = "precision"
     result_row = [regression_type +"- "+ dataset_name + "- " + regression_metric_name];
     result_row += scores;
     return result_row;
@@ -48,7 +70,10 @@ def runRegression(data, model_to_run, regression_metric, file_info,sample_size):
             if "object" in str(features[column].dtype):
                 features[column] = transformColumn(features[column]).values
 
-    features = preprocessing.scale(features)
+    if sample_size>len(features.index):
+        print("Sample size bigger than file")
+        return ("N/A","N/A")
+    # features = preprocessing.scale(features)
     targets = data["y"]
 
     # For logisitic regression need to convert labels to values
@@ -58,19 +83,34 @@ def runRegression(data, model_to_run, regression_metric, file_info,sample_size):
 
     # 10-fold cross validation with linear regression
     kfold = KFold(n_splits=10, random_state=0)
+    start_time = time.time()
     scores = cross_val_score(model, features, targets, cv=kfold, scoring=regression_metric)
+    end_time = time.time()
+    time_taken = end_time - start_time
 
-    # Convert from MSE to RMSE scores
-    if regression_metric == "neg_mean_squared_error":
-        mse_scores = -scores
-        scores = np.sqrt(mse_scores)
+    scores = fixScores(regression_metric,scores)
     # normalise scores to have all between 0 and 1
-        scores_norm = norm(scores)
-        scores = np.array([x/scores_norm for x in scores])
+
     print ("["+ file_info["name"]+": "+ model_to_run["name"] + ":"+ str(regression_metric) +" ] Score for sample size " + str(sample_size) + " : " + str(scores.mean()))
-    return scores.mean();
+    return (scores.mean(),time_taken);
 
 # End Creation and Runnning of Regression Model ########
+regression_metrics = {0: 'neg_mean_squared_error',1: "r2",2:"neg_mean_absolute_error", 3:"explained_variance", 4: "neg_median_absolute_error" }
+
+def normaliseScores(scores):
+    old_max = max(scores)
+    old_min = min(scores)
+    old_range = old_max - old_min
+    new_min = 0
+    new_max = 1
+    normalised_scores = np.array([(new_min + (((x-old_min)*(new_max-new_min)))/(old_max - old_min)) for x in scores])
+    return normalised_scores
+
+def fixScores(regression_metric,scores):
+    if max(scores)>1 or min(scores) <0:
+        return normaliseScores(scores)
+    else:
+        return scores
 
 ######## Helper methods, transform values/columns for classification
 def getFeatures(dataset_name):
@@ -150,18 +190,21 @@ def readData(file_info,nrows,model_type):
 def main():
     for model in config.models:
         model_name = model["name"]
+        print(model_name)
         for file_info in config.files:
             filename = file_info["name"]
-            for i in [0,1]:
-                metric = getMetric(model_name, i,False)
-                metric_name = getMetric(model_name, i,True)
+            metrics = config.metrics[model["type"]]
+            for i in metrics.keys():
+                metric = metrics[i]
                 scores = []
                 for sample_size in config.sample_sizes:
                     data = readData(file_info,sample_size, model["type"]);
-                    score = runRegression(data, model, metric,file_info,sample_size);
+                    (score,time) = runRegression(data, model, metric,file_info,sample_size);
                     scores.append(score)
-                result_row = createResultRow(model_name, filename,metric_name, scores);
+                    if config.using_evaluation:
+                        scores.append(time)
+                result_row = createResultRow(model_name, filename,metric, scores);
                 addToResults(result_row);
-    printResultsToCsv()
-
+                printResultsToCsv(False)
+        printResultsToCsv(True)
 main()
